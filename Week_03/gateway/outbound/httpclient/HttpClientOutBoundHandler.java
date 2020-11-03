@@ -1,12 +1,41 @@
-## 第三周作业
+package gateway.outbound.httpclient;
 
-### 作业一
-作业题：整合你上次作业的 httpclient/okhttp。
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpUtil;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.util.EntityUtils;
 
-上次使用的是 httpclient，整合到老师的示范网关里，这里整合的是 httpclient 最简单的版本：
+import java.io.IOException;
+import java.util.concurrent.*;
 
-```java
-public HttpClientOutBoundHandler(String backendUrl){
+import static io.netty.handler.codec.http.HttpResponseStatus.NO_CONTENT;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+
+/**
+ * @ClassName HttpClientOutBoundHandler
+ * @Description TODO
+ * @Author zhangwei
+ * @Date 2020-11-02 13:00
+ * @Version 1.0
+ */
+public class HttpClientOutBoundHandler {
+
+    private CloseableHttpClient httpclient;
+    private ExecutorService proxyService;
+    private String backendUrl;
+
+    public HttpClientOutBoundHandler(String backendUrl){
         this.backendUrl = backendUrl.endsWith("/")?backendUrl.substring(0,backendUrl.length()-1):backendUrl;
         int cores = Runtime.getRuntime().availableProcessors() * 2;
         long keepAliveTime = 1000;
@@ -18,10 +47,13 @@ public HttpClientOutBoundHandler(String backendUrl){
 
         httpclient = HttpClients.createDefault();
     }
-```
 
-```java
-private void fetchGet(final FullHttpRequest inbound, final ChannelHandlerContext ctx, final String url) {
+    public void handle(final FullHttpRequest fullRequest, final ChannelHandlerContext ctx) {
+        final String url = this.backendUrl + fullRequest.uri();
+        proxyService.submit(()->fetchGet(fullRequest, ctx, url));
+    }
+
+    private void fetchGet(final FullHttpRequest inbound, final ChannelHandlerContext ctx, final String url) {
         final HttpGet httpGet = new HttpGet(url);
         httpGet.setHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_KEEP_ALIVE);
 
@@ -56,6 +88,9 @@ private void fetchGet(final FullHttpRequest inbound, final ChannelHandlerContext
             ctx.flush();
         }
     }
-```
 
----
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        cause.printStackTrace();
+        ctx.close();
+    }
+}
