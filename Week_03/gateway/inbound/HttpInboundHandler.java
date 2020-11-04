@@ -2,6 +2,7 @@ package gateway.inbound;
 
 import gateway.filter.ProxyRequestFilter;
 import gateway.outbound.netty4.NettyHttpClientAsyncGet;
+import gateway.router.RandomRouter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -13,12 +14,10 @@ import java.util.List;
 
 public class HttpInboundHandler extends ChannelInboundHandlerAdapter {
 
-    private final String proxyServer;
     private NettyHttpClientAsyncGet nettyClient;
     List<ProxyRequestFilter> filters = new LinkedList<>();
 
-    public HttpInboundHandler(String proxyServer) {
-        this.proxyServer = proxyServer;
+    public HttpInboundHandler() {
         nettyClient = new NettyHttpClientAsyncGet();
     }
     
@@ -39,7 +38,12 @@ public class HttpInboundHandler extends ChannelInboundHandlerAdapter {
 
             System.out.println(filters);
 
-            final String url = this.proxyServer + fullRequest.uri();
+            /** 调用 Router 获取后端服务地址 */
+            String proxyServer = new RandomRouter().getProxyServer();
+
+            final String url = proxyServer + fullRequest.uri();
+
+            System.out.println("============url=============" + url);
             URI uri = new URI(url);
             System.out.println("url: " + url);
             nettyClient.doGetRequest(uri.getHost(), uri.getPort(), url, fullRequest, ctx);

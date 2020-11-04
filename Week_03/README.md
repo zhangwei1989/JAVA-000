@@ -230,3 +230,31 @@ public class AddHeaderFilter implements ProxyRequestFilter {
 ```
 
 ---
+
+### 作业四
+作业题：（选做）实现路由。。
+
+本地起了三个后端服务，实现随机访问某一个后端服务的路由：
+
+```java
+public class RandomRouter implements ProxyRouter {
+
+    @Override
+    public String getProxyServer() {
+        /** 获取 0-3 之间的随机数 */
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        return PROXY_SERVER_LIST.get(random.nextInt(3));
+    }
+}
+```
+
+然后在拿到请求的时候，去获取某一个路由后端服务。
+
+```java
+/** 调用 Router 获取后端服务地址 */
+            String proxyServer = new RandomRouter().getProxyServer();
+
+            final String url = proxyServer + fullRequest.uri();
+```
+
+---
