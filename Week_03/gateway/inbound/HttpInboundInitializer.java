@@ -20,6 +20,8 @@ public class HttpInboundInitializer extends ChannelInitializer<SocketChannel> {
 		ChannelPipeline p = ch.pipeline();
 		p.addLast(new HttpServerCodec());
 		p.addLast(new HttpObjectAggregator(1024 * 1024));
-		p.addLast(new HttpInboundHandler(this.proxyServer, new AddHeaderFilter()));
+		HttpInboundHandler inboundHandler = new HttpInboundHandler(this.proxyServer);
+		inboundHandler.filters.add(new AddHeaderFilter());
+		p.addLast(inboundHandler);
 	}
 }

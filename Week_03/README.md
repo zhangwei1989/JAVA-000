@@ -172,3 +172,61 @@ public class NettyHttpClientAsyncGet implements ProxyClient {
 ```
 
 ---
+
+### 作业三
+作业题：（必做）实现过滤器。
+
+实现了一个接口 ProxyRequestFilter 以及对应的一个实现类。在实现类中添加新的 header：
+
+```java
+public class AddHeaderFilter implements ProxyRequestFilter {
+
+    @Override
+    public void filter (FullHttpRequest req, ChannelHandlerContext ctx) {
+        req.headers().add("NIO", "Zhang Wei");
+    }
+}
+```
+
+然后在 `HttpInboundInitializer` 中新增 handler 时把过滤器集成进去。
+
+```java
+@Override
+	public void initChannel(SocketChannel ch) {
+		ChannelPipeline p = ch.pipeline();
+		p.addLast(new HttpServerCodec());
+		p.addLast(new HttpObjectAggregator(1024 * 1024));
+		HttpInboundHandler inboundHandler = new HttpInboundHandler(this.proxyServer);
+		inboundHandler.filters.add(new AddHeaderFilter());
+		p.addLast(inboundHandler);
+	}
+```
+
+最后在拿到请求的时候，去遍历执行所有的过滤器，实现对请求的再加工。
+
+```java
+@Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        try {
+            FullHttpRequest fullRequest = (FullHttpRequest) msg;
+
+            /** 调用所有 Filter 处理过滤逻辑 */
+            for (ProxyRequestFilter filter : this.filters) {
+                filter.filter(fullRequest, ctx);
+            }
+
+            System.out.println(filters);
+
+            final String url = this.proxyServer + fullRequest.uri();
+            URI uri = new URI(url);
+            System.out.println("url: " + url);
+            nettyClient.doGetRequest(uri.getHost(), uri.getPort(), url, fullRequest, ctx);
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            ReferenceCountUtil.release(msg);
+        }
+    }
+```
+
+---
