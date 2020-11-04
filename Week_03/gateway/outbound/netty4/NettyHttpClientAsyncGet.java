@@ -1,71 +1,23 @@
-## 第三周作业
+package gateway.outbound.netty4;
 
-### 作业一
-作业题：整合你上次作业的 httpclient/okhttp。
+import gateway.outbound.common.ProxyClient;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.*;
 
-上次使用的是 httpclient，整合到老师的示范网关里，这里整合的是 httpclient 最简单的版本：
+import java.util.Map;
 
-```java
-public HttpClientOutBoundHandler(String backendUrl){
-        this.backendUrl = backendUrl.endsWith("/")?backendUrl.substring(0,backendUrl.length()-1):backendUrl;
-        int cores = Runtime.getRuntime().availableProcessors() * 2;
-        long keepAliveTime = 1000;
-        int queueSize = 2048;
-        RejectedExecutionHandler handler = new ThreadPoolExecutor.CallerRunsPolicy();//.DiscardPolicy();
-        proxyService = new ThreadPoolExecutor(cores, cores,
-                keepAliveTime, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(queueSize),
-                new NamedThreadFactory("proxyService"), handler);
+import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
+import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
-        httpclient = HttpClients.createDefault();
-    }
-```
-
-```java
-private void fetchGet(final FullHttpRequest inbound, final ChannelHandlerContext ctx, final String url) {
-        final HttpGet httpGet = new HttpGet(url);
-        httpGet.setHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_KEEP_ALIVE);
-
-        try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
-            handleResponse(inbound, ctx, response);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void handleResponse(final FullHttpRequest fullRequest, final ChannelHandlerContext ctx, final HttpResponse endpointResponse) {
-        FullHttpResponse response = null;
-        try {
-            byte[] body = EntityUtils.toByteArray(endpointResponse.getEntity());
-
-            response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(body));
-            response.headers().set("Content-Type", "application/json");
-            response.headers().setInt("Content-Length", Integer.parseInt(endpointResponse.getFirstHeader("Content-Length").getValue()));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            response = new DefaultFullHttpResponse(HTTP_1_1, NO_CONTENT);
-            exceptionCaught(ctx, e);
-        } finally {
-            if (fullRequest != null) {
-                if (!HttpUtil.isKeepAlive(fullRequest)) {
-                    ctx.write(response).addListener(ChannelFutureListener.CLOSE);
-                } else {
-                    ctx.write(response);
-                }
-            }
-            ctx.flush();
-        }
-    }
-```
-
----
-
-### 作业二
-作业题：（选做）使用 netty 实现后端 http 访问（代替上一步骤）
-
-在这里将 httpclient 和 netty 作为客户端进行了整合，因为做的事情是一样的：
-
-```java
 public class NettyHttpClientAsyncGet implements ProxyClient {
 
     static class  NettyHttpClientHandler  extends ChannelInboundHandlerAdapter {
@@ -169,6 +121,3 @@ public class NettyHttpClientAsyncGet implements ProxyClient {
         }
     }
 }
-```
-
----
