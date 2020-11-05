@@ -1,5 +1,6 @@
-package gateway.outbound.common;
+package gateway.client.common;
 
+import gateway.server.HttpOutboundHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
 
@@ -12,7 +13,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
  */
 enum ProxyClientType
 {
-    HTTPCLIENTHTTP,     // 客户端使用OkHttp实现
+    HTTPCLIENTHTTP,     // 客户端使用HttpClient实现
     NETTY       // 客户端是用Netty实现
 }
 
@@ -25,5 +26,5 @@ public interface ProxyClient {
         NETTY       // 客户端是用Netty实现
     }
 
-    public void doGetRequest(String ip, int port, String url, FullHttpRequest origReq, ChannelHandlerContext ctx);
+    public void doGetRequest(String ip, int port, String url, FullHttpRequest origReq, ChannelHandlerContext ctx, HttpOutboundHandler consumer);
 }

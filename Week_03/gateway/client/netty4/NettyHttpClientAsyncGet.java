@@ -1,9 +1,9 @@
-package gateway.outbound.netty4;
+package gateway.client.netty4;
 
-import gateway.outbound.common.ProxyClient;
+import gateway.client.common.ProxyClient;
+import gateway.server.HttpOutboundHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -12,12 +12,6 @@ import io.netty.handler.codec.http.*;
 
 import java.util.Map;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-
 public class NettyHttpClientAsyncGet implements ProxyClient {
 
     static class  NettyHttpClientHandler  extends ChannelInboundHandlerAdapter {
@@ -25,11 +19,13 @@ public class NettyHttpClientAsyncGet implements ProxyClient {
         private ChannelHandlerContext consumerCtx;
         private FullHttpRequest originHttpRequest;
         private String targetUrl;
+        private HttpOutboundHandler consumer;
 
-        public NettyHttpClientHandler(ChannelHandlerContext ctx, FullHttpRequest fullHttpRequest, String url) {
+        public NettyHttpClientHandler(ChannelHandlerContext ctx, FullHttpRequest fullHttpRequest, String url, HttpOutboundHandler consumer) {
             this.consumerCtx = ctx;
             this.originHttpRequest = fullHttpRequest;
             this.targetUrl = url;
+            this.consumer = consumer;
         }
 
         @Override
@@ -55,31 +51,7 @@ public class NettyHttpClientAsyncGet implements ProxyClient {
                 byte[] responseBuf = new byte[buf.readableBytes()];
                 buf.readBytes(responseBuf);
 
-                FullHttpResponse response;
-
-                try {
-                    if (rsp != null) {
-                        response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(responseBuf));
-                    } else {
-                        response = new DefaultFullHttpResponse(HTTP_1_1, NOT_FOUND);
-                    }
-
-                    response.headers().set("Content-Type", "application/json");
-                    response.headers().setInt("Content-Length", response.content().readableBytes());
-
-                    System.out.println(response);
-
-                    consumerCtx.writeAndFlush(response);
-
-                    if (!HttpUtil.isKeepAlive(originHttpRequest)) {
-                        consumerCtx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-                    } else {
-                        response.headers().set(CONNECTION, KEEP_ALIVE);
-                        consumerCtx.writeAndFlush(response);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                this.consumer.proxyResponse(responseBuf, this.originHttpRequest, this.consumerCtx);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -94,9 +66,8 @@ public class NettyHttpClientAsyncGet implements ProxyClient {
     }
 
     @Override
-    public void doGetRequest(final String ip, final int port, final String url, final FullHttpRequest origReq, final ChannelHandlerContext ctx) {
+    public void doGetRequest(final String ip, final int port, final String url, final FullHttpRequest origReq, final ChannelHandlerContext ctx, HttpOutboundHandler consumer) {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
-
         System.out.println(url);
 
         try {
@@ -110,7 +81,7 @@ public class NettyHttpClientAsyncGet implements ProxyClient {
                             ch.pipeline().addLast(new HttpClientCodec());
                             ch.pipeline().addLast(new HttpObjectAggregator(1024 * 10 * 1024));
                             ch.pipeline().addLast(new HttpContentDecompressor());
-                            ch.pipeline().addLast(new NettyHttpClientHandler(ctx, origReq, url));
+                            ch.pipeline().addLast(new NettyHttpClientHandler(ctx, origReq, url, consumer));
                         }
                     });
 

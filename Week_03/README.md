@@ -232,7 +232,7 @@ public class AddHeaderFilter implements ProxyRequestFilter {
 ---
 
 ### 作业四
-作业题：（选做）实现路由。。
+作业题：（选做）实现路由
 
 本地起了三个后端服务，实现随机访问某一个后端服务的路由：
 
@@ -256,5 +256,19 @@ public class RandomRouter implements ProxyRouter {
 
             final String url = proxyServer + fullRequest.uri();
 ```
+
+---
+
+### 作业五
+作业题：（选做）跑一跑课上的各个例子，加深对多线程的理解
+
+已对照着课上的例子都跑了一遍
+
+---
+
+### 作业六
+作业题：（选做）完善网关的例子，试着调整其中的线程池参数
+
+已把网关的例子修改为线程池的方式去像真正的后端发起请求。
 
 ---

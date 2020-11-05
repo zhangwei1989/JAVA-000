@@ -1,9 +1,6 @@
 package gateway;
 
-import gateway.inbound.HttpInboundServer;
-
-import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
+import gateway.server.HttpInboundServer;
 
 public class NettyServerApplication {
     

@@ -1,5 +1,7 @@
-package gateway.outbound.httpclient;
+package gateway.client.httpclient;
 
+import gateway.client.common.ProxyClient;
+import gateway.server.HttpOutboundHandler;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -16,41 +18,24 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
-import java.util.concurrent.*;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.NO_CONTENT;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
- * @ClassName HttpClientOutBoundHandler
+ * @ClassName HttpClientAsyncGet
  * @Description TODO
  * @Author zhangwei
  * @Date 2020-11-02 13:00
  * @Version 1.0
  */
-public class HttpClientOutBoundHandler {
+public class HttpClientAsyncGet implements ProxyClient {
 
     private CloseableHttpClient httpclient;
-    private ExecutorService proxyService;
-    private String backendUrl;
 
-    public HttpClientOutBoundHandler(String backendUrl){
-        this.backendUrl = backendUrl.endsWith("/")?backendUrl.substring(0,backendUrl.length()-1):backendUrl;
-        int cores = Runtime.getRuntime().availableProcessors() * 2;
-        long keepAliveTime = 1000;
-        int queueSize = 2048;
-        RejectedExecutionHandler handler = new ThreadPoolExecutor.CallerRunsPolicy();//.DiscardPolicy();
-        proxyService = new ThreadPoolExecutor(cores, cores,
-                keepAliveTime, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(queueSize),
-                new NamedThreadFactory("proxyService"), handler);
-
-        httpclient = HttpClients.createDefault();
-    }
-
-    public void handle(final FullHttpRequest fullRequest, final ChannelHandlerContext ctx) {
-        final String url = this.backendUrl + fullRequest.uri();
-        proxyService.submit(()->fetchGet(fullRequest, ctx, url));
+    public HttpClientAsyncGet(){
+        this.httpclient = HttpClients.createDefault();
     }
 
     private void fetchGet(final FullHttpRequest inbound, final ChannelHandlerContext ctx, final String url) {
@@ -92,5 +77,19 @@ public class HttpClientOutBoundHandler {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
         ctx.close();
+    }
+
+    @Override
+    public void doGetRequest(final String ip, final int port, final String url, final FullHttpRequest origReq, final ChannelHandlerContext ctx, HttpOutboundHandler consumer) {
+        final HttpGet httpGet = new HttpGet(url);
+        httpGet.setHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_KEEP_ALIVE);
+
+        try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
+            byte[] rsp = EntityUtils.toByteArray(response.getEntity());
+
+            consumer.proxyResponse(rsp, origReq, ctx);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,24 +1,23 @@
-package gateway.inbound;
+package gateway.server;
 
+import gateway.client.common.ProxyClient;
 import gateway.filter.ProxyRequestFilter;
-import gateway.outbound.netty4.NettyHttpClientAsyncGet;
 import gateway.router.RandomRouter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.util.ReferenceCountUtil;
 
-import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 
 public class HttpInboundHandler extends ChannelInboundHandlerAdapter {
 
-    private NettyHttpClientAsyncGet nettyClient;
     List<ProxyRequestFilter> filters = new LinkedList<>();
+    HttpOutboundHandler outboundHandler;
 
     public HttpInboundHandler() {
-        nettyClient = new NettyHttpClientAsyncGet();
+        outboundHandler = new HttpOutboundHandler(ProxyClient.ProxyClientType.NETTY);
     }
     
     @Override
@@ -43,14 +42,17 @@ public class HttpInboundHandler extends ChannelInboundHandlerAdapter {
 
             final String url = proxyServer + fullRequest.uri();
 
-            System.out.println("============url=============" + url);
-            URI uri = new URI(url);
-            System.out.println("url: " + url);
-            nettyClient.doGetRequest(uri.getHost(), uri.getPort(), url, fullRequest, ctx);
+            outboundHandler.handle(fullRequest, ctx, url);
         } catch(Exception e) {
             e.printStackTrace();
         } finally {
             ReferenceCountUtil.release(msg);
         }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
+        ctx.close();
     }
 }

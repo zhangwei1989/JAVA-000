@@ -1,4 +1,4 @@
-package gateway.inbound;
+package gateway.server;
 
 import gateway.filter.AddHeaderFilter;
 import io.netty.channel.ChannelInitializer;
