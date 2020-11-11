@@ -241,6 +241,6 @@ public class HomeWork {
 
 此图为借鉴其他同学的，之后补上自己的
 
-![HTTPClient结果](http://zhangwei1989.oss-cn-beijing.aliyuncs.com/2020-11-11-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%BD%9C%E4%B8%9A%E5%9B%BE.png)
+![多线程和并发相关知识脑图](http://zhangwei1989.oss-cn-beijing.aliyuncs.com/2020-11-11-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%BD%9C%E4%B8%9A%E5%9B%BE.png)
 
 ---
