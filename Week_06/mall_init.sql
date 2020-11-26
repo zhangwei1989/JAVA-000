@@ -2,7 +2,7 @@ CREATE DATABASE mall;
 
 CREATE TABLE `mall`.`user` (
   `user_name` varchar(32) NOT NULL COMMENT '用户名',
-  `id` int(32) NOT NULL AUTO_INCREMENT COMMENT '用户主键',
+  `id` bigint(32) NOT NULL AUTO_INCREMENT COMMENT '用户主键',
   `password` varchar(64) NOT NULL COMMENT '用户登录密码',
   `mobile_phone` varchar(11) DEFAULT NULL COMMENT '手机号码',
   `created_at` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '用户创建时间',
@@ -12,7 +12,7 @@ CREATE TABLE `mall`.`user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 
 CREATE TABLE `mall`.`product` (
-  `id` int(32) NOT NULL AUTO_INCREMENT COMMENT '商品主键',
+  `id` bigint(32) NOT NULL AUTO_INCREMENT COMMENT '商品主键',
   `name` varchar(12) NOT NULL COMMENT '商品名称',
   `description` varchar(255) DEFAULT NULL COMMENT '商品描述',
   `price` decimal(7,2) NOT NULL COMMENT '商品价格',
@@ -23,8 +23,8 @@ CREATE TABLE `mall`.`product` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 
 CREATE TABLE `mall`.`order` (
-  `order_id` int(32) NOT NULL COMMENT '订单主键',
-  `user_id` int(32) NOT NULL COMMENT '用户 ID',
+  `order_id` bigint(32) NOT NULL COMMENT '订单主键',
+  `user_id` bigint(32) NOT NULL COMMENT '用户 ID',
   `created_at` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '订单创建时间',
   `update_at` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '订单更新时间',
   `pay_status` tinyint(2) NOT NULL DEFAULT '0' COMMENT '订单支付状态：0 -未支付；1-已支付',
@@ -34,9 +34,9 @@ CREATE TABLE `mall`.`order` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 
 CREATE TABLE `mall`.`order_product` (
-  `id` int(32) NOT NULL AUTO_INCREMENT COMMENT '商品快照主键',
-  `order_id` int(32) NOT NULL COMMENT '订单 ID',
-  `product_id` int(32) NOT NULL COMMENT '商品 ID',
+  `id` bigint(32) NOT NULL AUTO_INCREMENT COMMENT '商品快照主键',
+  `order_id` bigint(32) NOT NULL COMMENT '订单 ID',
+  `product_id` bigint(32) NOT NULL COMMENT '商品 ID',
   `product_name` varchar(12) NOT NULL COMMENT '商品快照名称',
   `product_description` varchar(255) DEFAULT NULL COMMENT '商品快照描述',
   `product_price` decimal(7,2) DEFAULT NULL COMMENT '商品快照价格',
