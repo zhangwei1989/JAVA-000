@@ -1,0 +1,33 @@
+version: '2'
+networks:
+  byfn:                                       #配置byfn网络
+services:
+  master:                                     #配置master服务
+    image: 'mysql:5.7'                        #使用刚才pull下来的镜像
+    restart: always
+    container_name: mysql-master              #容器起名 mysql-master
+    environment:
+      MYSQL_USER: test
+      MYSQL_PASSWORD: admin123
+      MYSQL_ROOT_PASSWORD: admin123           #配置root的密码
+    ports:
+      - '3316:3306'                           #配置端口映射
+    volumes:
+      - "./master:/etc/mysql/conf.d"   #配置my.cnf文件挂载，
+    networks:
+      - byfn                                  #配置当前servie挂载的网络
+
+  slave:                                      #配置slave服务
+    image: 'mysql:5.7'
+    restart: always
+    container_name: mysql-slave
+    environment:
+      MYSQL_USER: test
+      MYSQL_PASSWORD: admin123
+      MYSQL_ROOT_PASSWORD: admin123
+    ports:
+      - '3326:3306'
+    volumes:
+      - "./slave:/etc/mysql/conf.d"
+    networks:
+      - byfn
