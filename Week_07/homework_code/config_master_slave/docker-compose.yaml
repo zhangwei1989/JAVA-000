@@ -7,7 +7,7 @@ services:
     restart: always
     container_name: mysql-master              #容器起名 mysql-master
     environment:
-      MYSQL_USER: test
+      MYSQL_USER: controller
       MYSQL_PASSWORD: admin123
       MYSQL_ROOT_PASSWORD: admin123           #配置root的密码
     ports:
@@ -22,7 +22,7 @@ services:
     restart: always
     container_name: mysql-slave
     environment:
-      MYSQL_USER: test
+      MYSQL_USER: controller
       MYSQL_PASSWORD: admin123
       MYSQL_ROOT_PASSWORD: admin123
     ports:
