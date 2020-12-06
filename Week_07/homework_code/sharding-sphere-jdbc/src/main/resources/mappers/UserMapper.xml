@@ -14,4 +14,3 @@
         SELECT * FROM user_info;
     </select>
 </mapper>
-
