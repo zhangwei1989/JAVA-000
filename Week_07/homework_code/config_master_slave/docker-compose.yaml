@@ -43,6 +43,6 @@ services:
     ports:
       - '3336:3306'
     volumes:
-      - "./slave:/etc/mysql/conf.d"
+      - "./slave1:/etc/mysql/conf.d"
     networks:
       - byfn

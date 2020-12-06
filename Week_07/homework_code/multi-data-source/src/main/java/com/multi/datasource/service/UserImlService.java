@@ -3,6 +3,7 @@ package com.multi.datasource.service;
 import com.multi.datasource.dao.dto.UserDO;
 import com.multi.datasource.dao.firstDataSource.mapper.UserMapper;
 import com.multi.datasource.dao.secondDataSource.mapper.SecondUserMapper;
+import com.multi.datasource.dao.thirdDataSource.mapper.ThirdUserMapper;
 import com.multi.datasource.dao.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +28,19 @@ public class UserImlService implements UserService {
     @Autowired
     private SecondUserMapper secondUserMapper;
 
+    @Autowired
+    private ThirdUserMapper thirdUserMapper;
+
     @Override
     public List<UserDO> findAll() {
         List<UserDO> userInfos = secondUserMapper.findAll();
+
+        return userInfos;
+    }
+
+    @Override
+    public List<UserDO> findAllFromSlave() {
+        List<UserDO> userInfos = thirdUserMapper.findAll();
 
         return userInfos;
     }

@@ -27,14 +27,6 @@ public class TestController extends BaseController {
     @Autowired
     private UserService userService;
 
-    @GetMapping("/testdb1")
-    public RestResponse testdb1() {
-        List<UserDO> userDOList = userService.findAll();
-        System.out.println(userDOList);
-
-        return successResponse(userDOList);
-    }
-
     @GetMapping("/testdb0")
     public RestResponse testdb0(@RequestParam String name, @RequestParam String mobile) {
         UserVO userVO = new UserVO();
@@ -43,5 +35,19 @@ public class TestController extends BaseController {
         userService.save(userVO);
 
         return successResponse();
+    }
+
+    @GetMapping("/testdb1")
+    public RestResponse testdb1() {
+        List<UserDO> userDOList = userService.findAll();
+
+        return successResponse(userDOList);
+    }
+
+    @GetMapping("/testdb2")
+    public RestResponse testdb2() {
+        List<UserDO> userDOList = userService.findAllFromSlave();
+
+        return successResponse(userDOList);
     }
 }

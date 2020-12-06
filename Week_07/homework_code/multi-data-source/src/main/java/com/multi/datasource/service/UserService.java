@@ -9,5 +9,7 @@ public interface UserService {
 
     List<UserDO> findAll();
 
+    List<UserDO> findAllFromSlave();
+
     void save(UserVO userVO);
 }
