@@ -12,6 +12,83 @@
 
 作业题：（必做）设计对前面的订单表数据进行水平分库分表，拆分 2 个库，每个库 16 张表。并在新结构在演示常见的增删改查操作。代码、sql 和配置文件，上传到 Github。
 
+使用 sharding-proxy 实现水平分库分表的配置，拆分成2个库，各16张表。
+
+#### config-sharding.yaml 配置
+
+```sql
+schemaName: sharding_db
+
+dataSourceCommon:
+  username: root
+  password: admin123
+  connectionTimeoutMilliseconds: 30000
+  idleTimeoutMilliseconds: 60000
+  maxLifetimeMilliseconds: 1800000
+  maxPoolSize: 50
+  minPoolSize: 1
+  maintenanceIntervalMilliseconds: 30000
+
+dataSources:
+  db_0:
+    url: jdbc:mysql://192.168.99.100:3316/db_0?serverTimezone=UTC&useSSL=false
+  db_1:
+    url: jdbc:mysql://192.168.99.100:3326/db_1?serverTimezone=UTC&useSSL=false
+
+rules:
+  - !SHARDING
+    tables:
+      t_order:
+        actualDataNodes: db_${0..1}.t_order_${0..15}
+        tableStrategy:
+          standard:
+            shardingColumn: order_id
+            shardingAlgorithmName: t_order_inline
+        keyGenerateStrategy:
+          column: order_id
+          keyGeneratorName: snowflake
+    defaultDatabaseStrategy:
+      standard:
+        shardingColumn: order_id
+        shardingAlgorithmName: database_inline
+    defaultTableStrategy:
+      none:
+
+    shardingAlgorithms:
+      database_inline:
+        type: INLINE
+        props:
+          algorithm-expression: db_${order_id % 2}
+          allow-range-query-with-inline-sharding: true
+      t_order_inline:
+        type: INLINE
+        props:
+          algorithm-expression: t_order_${order_id % 16}
+          allow-range-query-with-inline-sharding: true
+
+    keyGenerators:
+      snowflake:
+        type: SNOWFLAKE
+        props:
+          worker-id: 123
+
+```
+
+#### 增删改查
+
+1. `insert into t_order (order_id, user_id, pay_status, status, total_price) VALUES (34, 10, 0, 1, 1000);`
+
+按照 `order_id % 2` 计算，新增的记录会增加到 db_0 号库，按照 `order_id % 16` 计算，新增的记录会增加到 t_order_2 号表。
+
+从结果可以看出符合预期
+
+![新增结果](http://zhangwei1989.oss-cn-beijing.aliyuncs.com/2020-12-11-%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202020-12-11%20%E4%B8%8B%E5%8D%887.27.39.png)
+
+2. `select * from t_order where user_id = 10;`
+
+使用非分片键进行查询，会导致广播扫描查询，势必效率会很低
+
+![user_id 查询结果](http://zhangwei1989.oss-cn-beijing.aliyuncs.com/2020-12-11-%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202020-12-11%20%E4%B8%8B%E5%8D%887.33.28.png)
 
 ---
 
