@@ -116,6 +116,8 @@ rules:
 
 作业题：（必做）基于 hmily TCC 或 ShardingSphere 的 Atomikos XA 实现一个简单的分布式事务应用 demo（二选一），提交到 Github。
 
+见作业代码项目 [XATransactionExample](https://github.com/zhangwei1989/JAVA-000/tree/main/Week_08/homework_code/XATransactionExample)
+
 ---
 
 ### 作业三
